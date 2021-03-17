@@ -19,7 +19,6 @@ class TempDisagg:
         self.fixed_rho = fixed_rho
         self.truncated_rho = truncated_rho
 
-
         self.n_l = None
         self.fr = None
         self.n_bc = None
@@ -70,16 +69,16 @@ class TempDisagg:
 
     def generate_conversion_matrix(self):
 
-        if self.conversion ==  "sum":
+        if self.conversion == "sum":
             conversion_weights = np.repeat(1, self.fr).reshape((1, self.fr))
         elif self.conversion == "average":
-            conversion_weights = (np.repeat(1, self.fr)/self.fr).reshape((1, self.fr))
+            conversion_weights = (np.repeat(1, self.fr) / self.fr).reshape((1, self.fr))
         elif self.conversion == "first":
             conversion_weights = np.zeros(self.fr).reshape((1, self.fr))
             conversion_weights[0, 0] = 1
         elif self.conversion == "last":
             conversion_weights = np.zeros(self.fr).reshape((1, self.fr))
-            conversion_weights[0,self.fr-1] = 1
+            conversion_weights[0, self.fr - 1] = 1
         else:
             sys.exit("Wrong Conversion")
 
@@ -126,7 +125,8 @@ class TempDisagg:
         # # print(np.hstack((rho, np.zeros(n-1))).shape)
         # # print(np.hstack((rho, np.zeros(n-1))).reshape(n, 1).shape)
         # # print(np.hstack((X.reshape(n,1), np.hstack((rho, np.zeros(n-1))).reshape(n, 1))).shape)
-        return np.linalg.inv(diag_rho).dot(np.hstack((X.reshape(n, 1), np.hstack((rho, np.zeros(n-1))).reshape(n, 1))))
+        return np.linalg.inv(diag_rho).dot(
+            np.hstack((X.reshape(n, 1), np.hstack((rho, np.zeros(n - 1))).reshape(n, 1))))
 
     def CalcGLS(self, y, X, vcov, stats=False):
 
@@ -249,7 +249,7 @@ class TempDisagg:
                 return -1 * self.CalcGLS(y_l, X_l, vcov)["logl"]
         elif self.method == "chow-lin-minrss-ecotrim":
             def objective_fn(rho):
-                Q = rho**pm
+                Q = rho ** pm
                 vcov = (c_matrix.dot(Q)).dot(c_matrix.T)
                 return self.CalcGLS(y_l, X_l, vcov)["rss"]
         elif self.method == "chow-lin-minrss-quilis":
@@ -286,8 +286,15 @@ class TempDisagg:
         else:
             sys.exit("method invalid")
 
-        if self.method in [ "chow-lin-maxlog", "chow-lin-minrss-ecotrim", "chow-lin-minrss-quilis", "litterman-maxlog",
-                            "litterman-minrss", "dynamic-maxlog", "dynamic-minrss"]:
+        if self.method in [
+            "chow-lin-maxlog",
+            "chow-lin-minrss-ecotrim",
+            "chow-lin-minrss-quilis",
+            "litterman-maxlog",
+            "litterman-minrss",
+            "dynamic-maxlog",
+            "dynamic-minrss"
+        ]:
 
             x0 = np.asarray([0.1])
             bounds = Bounds([-0.999], [0.999])
@@ -304,12 +311,18 @@ class TempDisagg:
 
         # print("self.rho_min ")
         # print(self.rho_min)
-        if self.method in ["chow-lin-maxlog", "chow-lin-minrss-ecotrim",
-                            "chow-lin-minrss-quilis", "chow-lin-fixed",
-                            "dynamic-maxlog", "dynamic-minrss",
-                            "dynamic-fixed", "ols"]:
+        if self.method in [
+            "chow-lin-maxlog",
+            "chow-lin-minrss-ecotrim",
+            "chow-lin-minrss-quilis",
+            "chow-lin-fixed",
+            "dynamic-maxlog",
+            "dynamic-minrss",
+            "dynamic-fixed",
+            "ols"
+        ]:
             Q_real = self.calculate_Q(pm, self.rho_min)
-        elif self.method in ["fernandez", "litterman-maxlog", "litterman-minrss","litterman-fixed"]:
+        elif self.method in ["fernandez", "litterman-maxlog", "litterman-minrss", "litterman-fixed"]:
             Q_real = self.calculate_QLit(X, self.rho_min)
 
         if self.method in ["dynamic-maxlog", "dynamic-minrss", "dynamic-fixed"] and self.rho_min != 0:
@@ -317,7 +330,7 @@ class TempDisagg:
             # print("inside if:"+str(X.shape))
             X_l = c_matrix.dot(X)
         else:
-            X = X.reshape(len(X),1)
+            X = X.reshape(len(X), 1)
 
         Q_l_real = c_matrix.dot(Q_real).dot(c_matrix.T)
         z = self.CalcGLS(y_l, X_l, Q_l_real, stats=True)
@@ -330,7 +343,7 @@ class TempDisagg:
         p = X.dot(z["coefficients"])
         D = Q_real.dot(c_matrix.T).dot(z["vcov_inv"])
 
-        u_l = y_l.reshape(len(y_l), 1) - c_matrix.dot(p).reshape(len(c_matrix.dot(p)),1)
+        u_l = y_l.reshape(len(y_l), 1) - c_matrix.dot(p).reshape(len(c_matrix.dot(p)), 1)
 
         y = p.reshape(len(p), 1) + D.dot(u_l)
 
